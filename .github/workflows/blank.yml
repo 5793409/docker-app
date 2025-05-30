@@ -70,5 +70,5 @@ jobs:
       - name: Run kubectl set image on bastion
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.BASTION_USER }}@${{ secrets.BASTION_HOST }} "
-            kubectl set image deployment/docker-app docker-app-container=${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }} --namespace=docker-app-namespace
+            kubectl set image deployment/docker-app docker-app-container=${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }} 
           "
