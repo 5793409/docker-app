@@ -48,3 +48,27 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+  deploy:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract tag or branch
+        id: extract
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          else
+            echo "TAG_NAME=latest" >> $GITHUB_ENV
+          fi
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.BASTION_SSH_KEY }}
+
+      - name: Run kubectl set image on bastion
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.BASTION_USER }}@${{ secrets.BASTION_HOST }} "
+            kubectl set image deployment/docker-app docker-app-container=${{ env.IMAGE_NAME }}:${{ env.TAG_NAME }} --namespace=docker-app-namespace
+          "
